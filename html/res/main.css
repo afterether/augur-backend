@@ -1,0 +1,16 @@
+body {
+	font-family:                    SANS-SERIF;
+	text-align:                     center;
+}
+div.market_entry {
+	display:                        block;
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      0.8em;
+}
+div.market_entry_field {
+	display:                        inline-block;
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      0.8em;
+}
