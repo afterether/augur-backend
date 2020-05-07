@@ -1,0 +1,10 @@
+{{define "category_record"}}
+<div class="category_record">
+	{{- range $i, $cat := .Subcategories}}
+		{{- if ne $i 0}}
+			{{template "category_separator"}}
+		{{- end}}
+		<div class="category_record_subcategory">{{$cat}}</div>
+	{{- end}}
+</div>
+{{end}}

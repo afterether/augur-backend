@@ -33,10 +33,16 @@ func main() {
 	r.GET("/index.html", main_page)
 	r.GET("/index.htm", main_page)
 	r.GET("/INDEX.HTM", main_page)
-	//r.GET("/augur/:contract",  contract_info)
+
+	r.GET("/markets.html",markets)
+	r.GET("/statistics.html",statistics)
+	r.GET("/categories.html",categories)
+	r.GET("/explorer.html",explorer)
+	r.GET("/market/:market",  market_trades)
 
 	r.Static("/imgs", "./html/imgs")
 	r.Static("/res", "./html/res")			// resources (static)
+	r.StaticFile("/favicon.ico", "./html/res/favicon.ico")
 
 	// Listen and serve on defined port
 	log.Printf("Listening on port %s", port_plain)

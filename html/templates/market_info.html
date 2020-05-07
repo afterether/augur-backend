@@ -1,0 +1,21 @@
+<html>
+<head>
+	<link href="/res/main.css" rel="stylesheet">
+	<title>Augur Market {{.market_address}}</title>
+	<meta name="description" content="{{.market_description}}">
+</head>
+<body>
+<h3 class="page_title">Market {{.market_address}}</h3>
+<div class="market_info">
+	{{template "market_trades" .Trades}}
+</div>
+<nav>
+	<ul>
+	<li>
+		<a class="btn_link" href="/index.html">Back</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+</ul>
+</nav>
+</body>
+</html>

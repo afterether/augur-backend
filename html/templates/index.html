@@ -3,11 +3,43 @@
 	<title>{{.title}}</title>
 	<link href="res/main.css" rel="stylesheet">
 </head>
+
 <body>
-Block number: {{.block_num}}<br/>
-Markets<br/>
-{{- range .Markets}}
-	{{template "market_entry" .}}
-{{- end}}
+<nav>
+	<ul>
+	<li>
+		<a class="btn_link" href="markets.html">Markets</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+	<li>
+		<a class="btn_link" href="categories.html">Categories</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+	<li>
+		<a class="btn_link" href="statistics.html">Statistics</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+	<li>
+		<a class="btn_link" href="explorer.html">Explorer</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+</ul>
+</nav>
+<div class="market_info">
+<table style="float: right">
+<tr>
+	<td>Block number: </td>
+	<td> {{.block_num}}</td>
+</tr>
+<tr>
+	<td>Money at stake: </td>
+	<td> $4,203,943</td>
+</tr>
+<tr>
+	<td>Markets: </td>
+	<td>4,321</td>
+</tr>
+</table>
+</div>
 </body>
 </html>

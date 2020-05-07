@@ -1,0 +1,10 @@
+{{define "mkt_trade"}}
+<tr class="mkt_trade">
+	<td class="mkt_trade_field" title="{{.FillerAddr}}">{{.FillerAddrSh}}</td>
+	<td class="mkt_trade_field">{{.Direction}}</td>
+	<td class="mkt_trade_field">{{.Date}}</td>
+	<td class="mkt_trade_field" style="text-align: right">{{.Price}}</td>
+	<td class="mkt_trade_field" style="text-align: right">{{.Amount}}</td>
+	<td class="mkt_trade_field" style="text-align: center">{{.Outcome}}</td>
+</tr>
+{{end}}
