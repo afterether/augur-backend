@@ -23,7 +23,6 @@ func main_page(c *gin.Context) {
 			"title": "Augur Prediction Markets",
 			"block_num" : blknum,
 	})
-//	c.String(http.StatusOK, "Hello %s %s", name,out)
 }
 func markets(c *gin.Context) {
 	off_str := c.Query("off")
