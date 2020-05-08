@@ -89,7 +89,7 @@ a.btn_link:hover {
 
 a.market_record {
 	color:							white;
-	tex-decoration:					none;
+	text-decoration:					none;
 }
 div.market_record {
 	display:                        block;
@@ -151,13 +151,46 @@ div.statistics {
 div.explorer {
 	margin-left:					1.0em;
 }
+div.market_info {
+	margin-left:					1.0em;
+}
 div.markets {
 	margin-left:					1.0em;
 }
-div.market_info {
+div.main_info {
 	top:							-15em;
 	text-align:						right;
 	position:						relative;
 	margin-right:					1.0em;
 
+}
+.market_detail {
+	margin-left:					1.0em;
+	border:							1px solid white;
+	border-collapse:				collapse;
+}
+div.market_outcome_vols {
+	margin-left:					1.0em;
+}
+table.market_outcome_vols {
+	border:							1px solid white;
+	border-collapse:				collapse;
+}
+div.mkt_outvol_hdr {
+	display:                        inline-block;
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      1.2em;
+}
+div.mkt_outvol_field {
+	display:                        inline-block;
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      1.2em;
+}
+div.mkt_outvol {
+	display:                        inline-block;
+	border:							solid 1px blue;
+	font-weight:                    bold;
+	font-size:                      1.2em;
 }

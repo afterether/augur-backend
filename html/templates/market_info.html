@@ -1,11 +1,63 @@
 <html>
 <head>
 	<link href="/res/main.css" rel="stylesheet">
-	<title>Augur Market {{.market_address}}</title>
-	<meta name="description" content="{{.market_description}}">
+	<title>Augur Market {{.Market.MktAddr}}</title>
+	<meta name="description" content="{{.Market.Description}}">
 </head>
 <body>
-<h3 class="page_title">Market {{.market_address}}</h3>
+<h3 class="page_title">Market Details</h3>
+<table class="market_detail">
+<tr>
+	<td>Address:</td>
+	<td>{{.Market.MktAddr}}</td>
+</tr>
+<tr>
+	<td>Creator:</td>
+	<td>{{.Market.Signer}}</td>
+</tr>
+<tr>
+	<td>End Date</td>
+	<td>{{.Market.EndDate}}</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>{{.Market.Description}}</td>
+</tr>
+<tr>
+	<td>Long description</td>
+	<td>{{.Market.LongDesc}}</td>
+</tr>
+<tr>
+	<td>Categories</td>
+	<td>{{.Market.Categories}}</td>
+</tr>
+<tr>
+	<td>Outcomes</td>
+	<td>{{.Market.Outcomes}}</td>
+</tr>
+<tr>
+	<td>Market Type</td>
+	<td>{{.Market.MktType}}</td>
+</td>
+<tr>
+	<td>Fee</td>
+	<td>{{.Market.Fee}}</td>
+</tr>
+<tr>
+	<td>OpenInterest</td>
+	<td>{{.Market.OpenInterest}}</td>
+</tr>
+<tr>
+	<td>Current Volume</td>
+	<td>{{.Market.CurVolume}}</td>
+</tr>
+</table>
+<br/><br/>
+<div class="market_outcome_vols">
+	Current Volume & Last Price data:<br/>
+	{{template "market_outcome_vols" .OutcomeVols}}
+</div>
+<br/><br/>
 <div class="market_info">
 	{{template "market_trades" .Trades}}
 </div>
