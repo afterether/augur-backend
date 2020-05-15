@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
+	"html/template"
 )
 const (
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
@@ -17,18 +18,79 @@ func create_augur_server() *AugurServer {
 	srv.storage = connect_to_storage()
 	return srv
 }
-func build_javascript_data_obj(mdepth *MarketDepth) string {
-	var output string
+func build_javascript_data_obj(mdepth *MarketDepth) (template.JS,template.JS) {
+	var asks_str string = "["
+	var bids_str string = "["
 
 	var last_price float64 = 0.0
-	for i:=0 ; i< mdepth.Asks {
-		if len(output) > 0 {
-			output = output + ","
+	for i:=0 ; i < len(mdepth.Asks) ; i++ {
+		if len(asks_str) > 1 {
+			asks_str = asks_str + ","
 		}
-		output = output + mdepth.Asks[i].Price
-		last_price = mdepth.Asks[i]
+		var entry string
+		entry = "{" +
+				"x:" + fmt.Sprintf("%v",mdepth.Asks[i].Price*10)  + "," +
+				"y:"  + fmt.Sprintf("%v",mdepth.Asks[i].Price) + "," +
+				"price: " + fmt.Sprintf("%v",mdepth.Asks[i].Price) + "," +
+				"addr: \"" + mdepth.Asks[i].EOAAddrSh + "\"," +
+				"expires: \"" + mdepth.Asks[i].Expires + "\"," +
+				"volume: " + fmt.Sprintf("%v",mdepth.Asks[i].Volume) + "," +
+				"click: function() {load_order_data(\"" +
+					mdepth.Asks[i].EOAAddrSh +"\",\"" +
+					mdepth.Asks[i].WalletAddrSh + "\"," +
+					fmt.Sprintf("%v,%v,%v,%v,%v,\"%v\",\"%v\"",
+										mdepth.Asks[i].MktAid,
+										mdepth.Asks[i].OutcomeIdx,
+										mdepth.Asks[i].TotalBids,
+										mdepth.Asks[i].TotalAsks,
+										mdepth.Asks[i].TotalCancel,
+										mdepth.Asks[i].DateCreated,
+										mdepth.Asks[i].Expires,
+					) +
+				")}," +
+				"toolTipContent: \"<div>User: {addr}<br/>Expires: {expires}<br/>ASK: {price}<br/>Volume: {volume}</div>\"" +
+				"}"
+		asks_str= asks_str + entry
+		last_price = mdepth.Asks[i].Price
 	}
-	return output
+// duplicate of above loop begins (ToDo: generalize it
+	for i:=0 ; i < len(mdepth.Bids) ; i++ {
+		if len(bids_str) > 1 {
+			bids_str = bids_str + ","
+		}
+		var entry string
+		entry = "{" +
+				"x:" + fmt.Sprintf("%v",mdepth.Bids[i].Price*10)  + "," +
+				"y:"  + fmt.Sprintf("%v",mdepth.Bids[i].Price) + "," +
+				"price: " + fmt.Sprintf("%v",mdepth.Bids[i].Price) + "," +
+				"addr: \"" + mdepth.Bids[i].EOAAddrSh + "\"," +
+				"expires: \"" + mdepth.Bids[i].Expires + "\"," +
+				"volume: " + fmt.Sprintf("%v",mdepth.Bids[i].Volume) + "," +
+				"click: function() {load_order_data(\"" +
+					mdepth.Bids[i].EOAAddrSh +"\",\"" +
+					mdepth.Bids[i].WalletAddrSh + "\"," +
+					fmt.Sprintf("%v,%v,%v,%v,%v,\"%v\",\"%v\"",
+										mdepth.Bids[i].MktAid,
+										mdepth.Bids[i].OutcomeIdx,
+										mdepth.Bids[i].TotalBids,
+										mdepth.Bids[i].TotalAsks,
+										mdepth.Bids[i].TotalCancel,
+										mdepth.Bids[i].DateCreated,
+										mdepth.Bids[i].Expires,
+					) +
+				")}," +
+				"toolTipContent: \"<div>User: {addr}<br/>Expires: {expires}<br/>BID: {price}<br/>Volume: {volume}</div>\"" +
+				"}"
+		bids_str= bids_str + entry
+		last_price = mdepth.Bids[i].Price
+	}
+// duplicate of above loop ends
+
+
+	asks_str = asks_str + "]"
+	bids_str = bids_str + "]"
+	_ = last_price
+	return template.JS(bids_str),template.JS(asks_str)
 }
 func main_page(c *gin.Context) {
 	blknum,_:= augur_srv.storage.get_last_block_num()
@@ -122,12 +184,15 @@ func market_depth(c *gin.Context) {
 
 	market_info,_ := augur_srv.storage.get_market_info(market)
 	mdepth := augur_srv.storage.get_mkt_depth(market,outcome)
-	js_data := build_javascript_data_obj(&mdepth)
+	js_bid_data,js_ask_data := build_javascript_data_obj(mdepth)
+	fmt.Printf("js ask_data = %v\n",js_ask_data)
+	fmt.Printf("js bid_data = %v\n",js_bid_data)
 	c.HTML(http.StatusOK, "market_depth.html", gin.H{
 			"title": "Market Depth",
 			"Market": market_info,
 			"Bids": mdepth.Bids,
 			"Asks": mdepth.Asks,
-			"JSData": js_data,
+			"JSAskData": js_ask_data,
+			"JSBidData": js_bid_data,
 	})
 }

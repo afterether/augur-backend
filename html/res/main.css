@@ -217,3 +217,9 @@ a.depth_link {
 .market_asks {
 	margin-left:					1.0em;
 }
+td.mkt_depth_hdr {
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      1.2em;
+	color:							yellow;
+}
