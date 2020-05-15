@@ -1,0 +1,11 @@
+{{define "market_depth_pane"}}
+<table class="market_depth_pane">
+<tr>
+	<td class="mkt_outvol_hdr">Size</td>
+	<td class="mkt_outvol_hdr">Ask/Bid</td>
+</tr>
+	{{- range $i, $drow := .}}
+		{{template "mkt_depth_row" $drow}}
+	{{- end}}
+</table>
+{{end}}

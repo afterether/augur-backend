@@ -1,0 +1,67 @@
+<html>
+<head>
+	<link href="/res/main.css" rel="stylesheet">
+	<title>Augur Market Depth {{.Market.MktAddr}}</title>
+	<meta name="description" content="{{.Market.Description}}">
+	<script>
+	</script>
+</head>
+<body>
+	<script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js" type="text/javascript"></script>
+<script>
+    anychart.onDocumentReady(function() {
+		var data = [
+			  ["January", 10000],
+			  ["February", 12000],
+			  ["March", 18000],
+			  ["April", 11000],
+			  ["May", 9000]
+		];
+        // create a pie chart
+        var chart = anychart.line(data);
+        chart.title("Market Depth");
+        // set the container where chart will be drawn
+        chart.container("container");
+        //  draw the chart on the page
+        chart.draw();
+    });
+</script>
+
+
+<h3 class="page_title">Market Details</h3>
+<table class="market_detail">
+<tr>
+	<td>Address:</td>
+	<td>{{.Market.MktAddr}}</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>{{.Market.Description}}</td>
+</tr>
+</table>
+<br/>
+<div id="container" style="width: 500px; height: 400px;"></div>
+<br/><br/>
+<table>
+	<tr>
+		<td>
+			<div class="market_bids">
+			{{template "market_depth_pane" .Bids}}
+			</div>
+		<td>
+			<div class="market_asks">
+				{{template "market_depth_pane" .Asks}}
+			</div>
+		</td>
+	</tr>
+</table>
+<nav>
+	<ul>
+	<li>
+		<a class="btn_link" href="/index.html">Back</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+</ul>
+</nav>
+</body>
+</html>

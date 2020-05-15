@@ -194,3 +194,26 @@ div.mkt_outvol {
 	font-weight:                    bold;
 	font-size:                      1.2em;
 }
+table.market_depth_pane {
+	border:							1px solid white;
+	border-collapse:				collapse;
+}
+div.mkt_depth_field {
+	display:                        inline-block;
+	border:							solid 1px black;
+	font-weight:                    bold;
+	font-size:                      1.2em;
+}
+a.depth_link {
+	text-decoration:			none;
+	color:						white;
+}
+.market_depth {
+	margin-left:					1.0em;
+}
+.market_bids {
+	margin-left:					1.0em;
+}
+.market_asks {
+	margin-left:					1.0em;
+}
