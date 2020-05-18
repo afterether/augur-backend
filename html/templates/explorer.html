@@ -4,12 +4,18 @@
 	<link href="res/main.css" rel="stylesheet">
 </head>
 <body>
-<h3 class="page_title">Augur Events Explorer</h3>
+<h3 class="page_title">Augur Explorer</h3>
+Type one of the following and press 'Search' button:
+<br/>
+<ul>
+	<li>Ethereum User Address
+	<li>Augur Market Address
+	<li>Transaction Hash
+	<li>Block Number
+</ul>
 <div class="explorer">
-	<form action="">
-		Tx Hash:
-
-		<input type="text" name="tx_hash">
+	<form type=GET action="/search/">
+		<input type="text" name="q">
 		<input type="submit" value=" Search ">
 	</form>
 </div>

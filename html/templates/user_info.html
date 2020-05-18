@@ -1,0 +1,80 @@
+<html>
+<head>
+	<title>{{.title}}</title>
+	<link href="res/main.css" rel="stylesheet">
+</head>
+<body>
+	<h3 class="page_title">User Info for {{.UserInfo.EOAAddrSh}}</h3>
+<div class="user_info">
+	<table class="user_info">
+		<tr>
+			<td>User Address</td>
+			<td title="{{.UserInfo.EOAAddr}}">{{.UserInfo.EOAAddrSh}}</td>
+		</tr>
+		<tr>
+			<td>Wallet Contract Address</td>
+			<td title="{{.UserInfo.WalletAddr}}">{{.UserInfo.WalletAddrSh}}</td>
+		</tr>
+		<tr>
+			<td>Total Trades</td>
+			<td>{{.UserInfo.TotalTrades}}</td>
+		</tr>
+		<tr>
+			<td>Markets Created</td>
+			<td>{{.UserInfo.MarketsCreated}}</td>
+		</tr>
+		<tr>
+			<td>Markets Traded</td>
+			<td>{{.UserInfo.MarketsTraded}}</td>
+		</tr>
+		<tr>
+			<td>Withdrawal Requests</td>
+			<td>{{.UserInfo.WithdrawReqs}}</td>
+		</tr>
+		<tr>
+			<td>Deposit Requests</td>
+			<td>{{.UserInfo.DepositReqs}}</td>
+		</tr>
+		<tr>
+			<td>Total Reports</td>
+			<td>{{.UserInfo.TotalReports}}</td>
+		</tr>
+		<tr>
+			<td>Total Reports as Designated Reporter</td>
+			<td>{{.UserInfo.TotalDesignated}}</td>
+		</tr>
+		<tr>
+			<td>Profit/Loss</td>
+			<td>{{.UserInfo.ProfitLoss}}</td>
+		</tr>
+		<tr>
+			<td>Profit in Affiliate Commissions</td>
+			<td>{{.UserInfo.AffProfits}}</td>
+		</tr>
+		<tr>
+			<td>Money At Stake</td>
+			<td>{{.UserInfo.MoneyAtStake}}</td>
+		</tr>
+		<tr>
+			<td>Total Deposited</td>
+			<td>{{.UserInfo.TotalDeposited}}</td>
+		</tr>
+		<tr>
+			<td>Total Withdrawn</td>
+			<td>{{.UserInfo.TotalWithdrawn}}</td>
+		</tr>
+	</table>
+	<br/>
+	User Profit/Loss history:<br/><br/>
+	<img src="/imgs/profitloss_chart.jpg" style="width: 30em; text-align: center; display: inline-block;">;
+</div>
+<nav>
+	<ul>
+	<li>
+		<a class="btn_link" href="/index.html">Back</a>
+		<span></span><span></span><span></span><span></span>
+	</li>
+</ul>
+</nav>
+</body>
+</html>

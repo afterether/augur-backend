@@ -3,8 +3,11 @@ import (
 	"fmt"
 	"strconv"
 	"net/http"
+	"encoding/hex"
 	"github.com/gin-gonic/gin"
 	"html/template"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 const (
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
@@ -18,6 +21,33 @@ func create_augur_server() *AugurServer {
 	srv.storage = connect_to_storage()
 	return srv
 }
+func mkt_depth_entry_to_js_obj(de *DepthEntry) string {
+
+	var output string
+	output = "{" +
+				"x:" + fmt.Sprintf("%v",de.Price)  + "," +
+				"y:"  + fmt.Sprintf("%v",de.AccumVol) + "," +
+				"price: " + fmt.Sprintf("%v",de.Price) + "," +
+				"addr: \"" + de.EOAAddrSh + "\"," +
+				"expires: \"" + de.Expires + "\"," +
+				"volume: " + fmt.Sprintf("%v",de.Volume) + "," +
+				"click: function() {load_order_data(\"" +
+					de.EOAAddrSh +"\",\"" +
+					de.WalletAddrSh + "\"," +
+					fmt.Sprintf("%v,%v,%v,%v,%v,%v,\"%v\",\"%v\"",
+										de.MktAid,
+										de.OutcomeIdx,
+										de.Volume,
+										de.TotalBids,
+										de.TotalAsks,
+										de.TotalCancel,
+										de.DateCreated,
+										de.Expires,
+					) +
+				")}" +
+				"}"
+	return output
+}
 func build_javascript_data_obj(mdepth *MarketDepth) (template.JS,template.JS) {
 	var asks_str string = "["
 	var bids_str string = "["
@@ -28,64 +58,30 @@ func build_javascript_data_obj(mdepth *MarketDepth) (template.JS,template.JS) {
 			asks_str = asks_str + ","
 		}
 		var entry string
-		entry = "{" +
-				"x:" + fmt.Sprintf("%v",mdepth.Asks[i].Price*10)  + "," +
-				"y:"  + fmt.Sprintf("%v",mdepth.Asks[i].Price) + "," +
-				"price: " + fmt.Sprintf("%v",mdepth.Asks[i].Price) + "," +
-				"addr: \"" + mdepth.Asks[i].EOAAddrSh + "\"," +
-				"expires: \"" + mdepth.Asks[i].Expires + "\"," +
-				"volume: " + fmt.Sprintf("%v",mdepth.Asks[i].Volume) + "," +
-				"click: function() {load_order_data(\"" +
-					mdepth.Asks[i].EOAAddrSh +"\",\"" +
-					mdepth.Asks[i].WalletAddrSh + "\"," +
-					fmt.Sprintf("%v,%v,%v,%v,%v,\"%v\",\"%v\"",
-										mdepth.Asks[i].MktAid,
-										mdepth.Asks[i].OutcomeIdx,
-										mdepth.Asks[i].TotalBids,
-										mdepth.Asks[i].TotalAsks,
-										mdepth.Asks[i].TotalCancel,
-										mdepth.Asks[i].DateCreated,
-										mdepth.Asks[i].Expires,
-					) +
-				")}," +
-				"toolTipContent: \"<div>User: {addr}<br/>Expires: {expires}<br/>ASK: {price}<br/>Volume: {volume}</div>\"" +
-				"}"
+		entry = mkt_depth_entry_to_js_obj(&mdepth.Asks[i])
 		asks_str= asks_str + entry
 		last_price = mdepth.Asks[i].Price
 	}
-// duplicate of above loop begins (ToDo: generalize it
+/*	// Possibly replace this with a line indicating the spread, as another Serie
+	if len(mdepth.Asks) > 0 {
+		if len(mdepth.Bids) > 0 {
+			// add fake BID entry to fill the hole for the spread
+			last_elt:=len(mdepth.Asks)-1
+			fake_entry := mdepth.Asks[last_elt]
+			fake_entry.Price = mdepth.Bids[0].Price*10
+			bids_str = "[" + mkt_depth_entry_to_js_obj(&fake_entry)
+		}
+	}
+*/
 	for i:=0 ; i < len(mdepth.Bids) ; i++ {
 		if len(bids_str) > 1 {
 			bids_str = bids_str + ","
 		}
 		var entry string
-		entry = "{" +
-				"x:" + fmt.Sprintf("%v",mdepth.Bids[i].Price*10)  + "," +
-				"y:"  + fmt.Sprintf("%v",mdepth.Bids[i].Price) + "," +
-				"price: " + fmt.Sprintf("%v",mdepth.Bids[i].Price) + "," +
-				"addr: \"" + mdepth.Bids[i].EOAAddrSh + "\"," +
-				"expires: \"" + mdepth.Bids[i].Expires + "\"," +
-				"volume: " + fmt.Sprintf("%v",mdepth.Bids[i].Volume) + "," +
-				"click: function() {load_order_data(\"" +
-					mdepth.Bids[i].EOAAddrSh +"\",\"" +
-					mdepth.Bids[i].WalletAddrSh + "\"," +
-					fmt.Sprintf("%v,%v,%v,%v,%v,\"%v\",\"%v\"",
-										mdepth.Bids[i].MktAid,
-										mdepth.Bids[i].OutcomeIdx,
-										mdepth.Bids[i].TotalBids,
-										mdepth.Bids[i].TotalAsks,
-										mdepth.Bids[i].TotalCancel,
-										mdepth.Bids[i].DateCreated,
-										mdepth.Bids[i].Expires,
-					) +
-				")}," +
-				"toolTipContent: \"<div>User: {addr}<br/>Expires: {expires}<br/>BID: {price}<br/>Volume: {volume}</div>\"" +
-				"}"
+		entry = mkt_depth_entry_to_js_obj(&mdepth.Bids[i])
 		bids_str= bids_str + entry
 		last_price = mdepth.Bids[i].Price
 	}
-// duplicate of above loop ends
-
 
 	asks_str = asks_str + "]"
 	bids_str = bids_str + "]"
@@ -161,6 +157,8 @@ func market_trades(c *gin.Context) {
 	})
 }
 func market_depth(c *gin.Context) {
+
+	// Market Depth Info: https://en.wikipedia.org/wiki/Order_book_(trading)
 	market := c.Param("market")
 	p_outcome := c.Param("outcome")
 	var outcome uint8
@@ -195,4 +193,67 @@ func market_depth(c *gin.Context) {
 			"JSAskData": js_ask_data,
 			"JSBidData": js_bid_data,
 	})
+}
+func serve_user_info_page(c *gin.Context,addr string) {
+
+	aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
+	if err == nil {
+		user_info := augur_srv.storage.get_user_info(aid)
+		c.HTML(http.StatusOK, "user_info.html", gin.H{
+			"title": "User "+addr,
+			"user_addr": addr,
+			"UserInfo" : user_info,
+		})
+	} else {
+		c.HTML(http.StatusOK, "user_not_found.html", gin.H{
+			"title": "User "+addr,
+			"user_addr": addr,
+		})
+	}
+}
+func serve_tx_info_page(c *gin.Context,tx_hash string) {
+
+	c.HTML(http.StatusOK, "tx_info.html", gin.H{
+			"title": "Transaction " + tx_hash,
+			"tx_hash" : tx_hash,
+	})
+}
+func search(c *gin.Context) {
+
+	keyword := c.Query("q")
+	fmt.Printf("Searching for %v\n",keyword)
+	if (len(keyword) == 40) || (len(keyword) == 42) { // address
+		if len(keyword) == 42 {	// strip 0x prefix
+			keyword = keyword[2:]
+		}
+		addr_bytes,err := hex.DecodeString(keyword)
+		if err == nil {
+			addr := common.BytesToAddress(addr_bytes)
+			addr_str := addr.String()
+			serve_user_info_page(c,addr_str)
+		} else {
+			c.HTML(http.StatusBadRequest, "error.html", gin.H{
+				"title": "Augur Markets: Error",
+				"ErrDescr": "Invalid HEX string in address parameter",
+			})
+			return
+		}
+	}
+	if (len(keyword) == 64) || (len(keyword) == 66) { // Hash (Tx hash)
+		if len(keyword) == 66 {	// strip 0x prefix
+			keyword = keyword[2:]
+		}
+		hash_bytes,err := hex.DecodeString(keyword)
+		if err != nil {
+			hash := common.BytesToHash(hash_bytes)
+			hash_str := hash.String()
+			serve_tx_info_page(c,hash_str)
+		} else {
+			c.HTML(http.StatusBadRequest, "error.html", gin.H{
+				"title": "Augur Markets: Error",
+				"ErrDescr": "Invalid HEX string in hash parameter",
+			})
+			return
+		}
+	}
 }

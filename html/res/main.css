@@ -223,3 +223,10 @@ td.mkt_depth_hdr {
 	font-size:                      1.2em;
 	color:							yellow;
 }
+#depth_graph {
+	padding:						1em;
+	max-width:						30em;
+}
+div.user_info {
+	text-align:						center;
+}
