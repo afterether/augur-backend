@@ -127,11 +127,10 @@ func categories(c *gin.Context) {
 	})
 }
 func statistics(c *gin.Context) {
-	blknum,res := augur_srv.storage.get_last_block_num()
-	_ = res
+	stats := augur_srv.storage.get_main_stats()
 	c.HTML(http.StatusOK, "statistics.html", gin.H{
 			"title": "Augur Market Statistics",
-			"block_num" : blknum,
+			"MainStats" : stats,
 	})
 }
 func explorer(c *gin.Context) {
