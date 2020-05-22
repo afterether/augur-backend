@@ -40,6 +40,7 @@ func main() {
 	r.GET("/explorer.html",explorer)
 	r.GET("/market/:market",  market_trades)
 	r.GET("/mdepth/:market/:outcome", market_depth)
+	r.GET("/mphist/:market/:outcome", market_price_history)
 	r.GET("/search", search)
 
 	r.Static("/imgs", "./html/imgs")

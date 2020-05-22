@@ -86,7 +86,39 @@ func build_javascript_data_obj(mdepth *MarketDepth) (template.JS,template.JS) {
 	asks_str = asks_str + "]"
 	bids_str = bids_str + "]"
 	_ = last_price
+	fmt.Printf("asks JS string: %v\n",asks_str)
+	fmt.Printf("bids JS string: %v\n",bids_str)
 	return template.JS(bids_str),template.JS(asks_str)
+}
+func build_javascript_price_history(orders *[]MarketOrder) template.JS {
+	var data_str string = "["
+
+	for i:=0 ; i < len(*orders) ; i++ {
+		if len(data_str) > 1 {
+			data_str = data_str + ","
+		}
+		var e = &(*orders)[i];
+		var entry string
+		entry = "{" +
+//				"x:" + fmt.Sprintf("\"%v\"",e.Date)  + "," +
+				"x:" + fmt.Sprintf("%v",i)  + "," +
+				"y:"  + fmt.Sprintf("%v",e.Price) + "," +
+				"price: " + fmt.Sprintf("%v",e.Price) + "," +
+				"volume: " + fmt.Sprintf("%v",e.Volume) + "," +
+				"click: function() {load_order_data(\"" +
+					e.SellerEOAAddrSh +"\",\"" +
+					e.SellerWalletAddrSh + "\",\"" +
+					e.BuyerEOAAddrSh + "\",\"" +
+					e.BuyerWalletAddrSh + "\"," +
+					fmt.Sprintf("%v,%v,%v,\"%v\"",e.MktAid,e.Price,e.Volume,e.Date) +
+				")}" +
+				"}"
+		fmt.Printf("\nentry = %v\n",entry)
+		data_str= data_str + entry
+	}
+	data_str = data_str + "]"
+	fmt.Printf("JS price history string: %v\n",data_str)
+	return template.JS(data_str)
 }
 func main_page(c *gin.Context) {
 	blknum,_:= augur_srv.storage.get_last_block_num()
@@ -144,7 +176,7 @@ func explorer(c *gin.Context) {
 func market_trades(c *gin.Context) {
 	market := c.Param("market")
 	fmt.Printf("getting trades for market %v\n",market)
-	market_info,_ := augur_srv.storage.get_market_info(market)
+	market_info,_ := augur_srv.storage.get_market_info(market,0,false)
 	fmt.Printf("market info = %+v",market_info)
 	trades := augur_srv.storage.get_mkt_trades(market)
 	outcome_vols,_ := augur_srv.storage.get_outcome_volumes(market)
@@ -160,26 +192,33 @@ func market_depth(c *gin.Context) {
 	// Market Depth Info: https://en.wikipedia.org/wiki/Order_book_(trading)
 	market := c.Param("market")
 	p_outcome := c.Param("outcome")
-	var outcome uint8
+	var outcome int
 	if len(p_outcome) > 0 {
 		p, err := strconv.Atoi(p_outcome)
 		if err != nil {
 			c.HTML(http.StatusBadRequest, "error.html", gin.H{
 				"title": "Augur Markets: Error",
-				"ErrDescr": "Can't parse offset",
+				"ErrDescr": "Can't parse outcome",
 			})
 			return
 		}
-		outcome = uint8(p)
+		outcome = int(p)
 	} else {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{
 			"title": "Augur Markets: Error",
-			"ErrDescr": "Can't parse offset",
+			"ErrDescr": "Can't parse outcome",
 		})
 		return
 	}
 
-	market_info,_ := augur_srv.storage.get_market_info(market)
+	market_info,err := augur_srv.storage.get_market_info(market,outcome,true)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Can't find this market, address not registered",
+		})
+		return
+	}
 	mdepth := augur_srv.storage.get_mkt_depth(market,outcome)
 	js_bid_data,js_ask_data := build_javascript_data_obj(mdepth)
 	fmt.Printf("js ask_data = %v\n",js_ask_data)
@@ -191,6 +230,47 @@ func market_depth(c *gin.Context) {
 			"Asks": mdepth.Asks,
 			"JSAskData": js_ask_data,
 			"JSBidData": js_bid_data,
+	})
+}
+func market_price_history(c *gin.Context) {
+
+	market := c.Param("market")
+	p_outcome := c.Param("outcome")
+	var outcome int
+	if len(p_outcome) > 0 {
+		p, err := strconv.Atoi(p_outcome)
+		if err != nil {
+			c.HTML(http.StatusBadRequest, "error.html", gin.H{
+				"title": "Augur Markets: Error",
+				"ErrDescr": "Can't parse outcome",
+			})
+			return
+		}
+		outcome = int(p)
+	} else {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Can't parse outcome",
+		})
+		return
+	}
+
+	market_info,err := augur_srv.storage.get_market_info(market,outcome,true)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Can't find this market, address not registered",
+		})
+		return
+	}
+	mkt_price_hist := augur_srv.storage.get_price_history_for_outcome(market_info.MktAid,outcome)
+	js_price_history := build_javascript_price_history(&mkt_price_hist)
+	fmt.Printf("js price history = %v\n",js_price_history)
+	c.HTML(http.StatusOK, "price_history.html", gin.H{
+			"title": "Market Price History",
+			"Market": market_info,
+			"Prices": mkt_price_hist,
+			"JSPriceData": js_price_history,
 	})
 }
 func serve_user_info_page(c *gin.Context,addr string) {
