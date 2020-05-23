@@ -120,6 +120,32 @@ func build_javascript_price_history(orders *[]MarketOrder) template.JS {
 	fmt.Printf("JS price history string: %v\n",data_str)
 	return template.JS(data_str)
 }
+func build_javascript_profit_loss_history(entries *[]PLEntry) template.JS {
+	var data_str string = "["
+
+	for i:=0 ; i < len(*entries) ; i++ {
+		if len(data_str) > 1 {
+			data_str = data_str + ","
+		}
+		var e = &(*entries)[i];
+		var entry string
+		entry = "{" +
+				"x:" + fmt.Sprintf("%v",i)  + "," +
+				"y:"  + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
+				"click: function() {load_data(" +
+					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\"",
+								e.NetPosition,e.AccumPl,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
+				")}" +
+				"}"
+		fmt.Printf("\nentry = %v\n",entry)
+		data_str= data_str + entry
+	}
+	data_str = data_str + "]"
+	fmt.Printf("JS profit loss hist string: %v\n",data_str)
+	return template.JS(data_str)
+}
 func main_page(c *gin.Context) {
 	blknum,_:= augur_srv.storage.get_last_block_num()
 	c.HTML(http.StatusOK, "index.html", gin.H{
@@ -275,13 +301,17 @@ func market_price_history(c *gin.Context) {
 }
 func serve_user_info_page(c *gin.Context,addr string) {
 
-	aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
+	eoa_aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
 	if err == nil {
-		user_info := augur_srv.storage.get_user_info(aid)
+		user_info := augur_srv.storage.get_user_info(eoa_aid)
+		pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
+		js_data := build_javascript_profit_loss_history(&pl_entries)
 		c.HTML(http.StatusOK, "user_info.html", gin.H{
 			"title": "User "+addr,
 			"user_addr": addr,
 			"UserInfo" : user_info,
+			"PLEntries" : pl_entries,
+			"JSData" : js_data,
 		})
 	} else {
 		c.HTML(http.StatusOK, "user_not_found.html", gin.H{
@@ -335,4 +365,24 @@ func search(c *gin.Context) {
 			return
 		}
 	}
+}
+func profit_loss(c *gin.Context) {
+
+	addr := c.Param("addr")
+	addr_aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Can't find real user address",
+		})
+		return
+	}
+	pl_entries := augur_srv.storage.get_profit_loss(addr_aid);
+	//js_price_history := build_javascript_price_history(&mkt_price_hist)
+	//fmt.Printf("js price history = %v\n",js_price_history)
+	c.HTML(http.StatusOK, "profit_loss_history.html", gin.H{
+			"title": "User's profit/loss",
+			"PLEntries": pl_entries,
+//			"JSPriceData": js_price_history,
+	})
 }
