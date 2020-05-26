@@ -135,7 +135,7 @@ func build_javascript_profit_loss_history(entries *[]PLEntry) template.JS {
 				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_data(" +
-					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\"",
+					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\"",
 								e.NetPosition,e.AccumPl,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
 				")}" +
 				"}"
@@ -305,13 +305,16 @@ func serve_user_info_page(c *gin.Context,addr string) {
 	if err == nil {
 		user_info := augur_srv.storage.get_user_info(eoa_aid)
 		pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
-		js_data := build_javascript_profit_loss_history(&pl_entries)
+		open_pos_entries := augur_srv.storage.get_open_positions(eoa_aid)
+		js_pl_data := build_javascript_profit_loss_history(&pl_entries)
+		js_open_pos_data := build_javascript_profit_loss_history(&open_pos_entries)
 		c.HTML(http.StatusOK, "user_info.html", gin.H{
 			"title": "User "+addr,
 			"user_addr": addr,
 			"UserInfo" : user_info,
 			"PLEntries" : pl_entries,
-			"JSData" : js_data,
+			"JSPLData" : js_pl_data,
+			"JSOpenPosData" : js_open_pos_data,
 		})
 	} else {
 		c.HTML(http.StatusOK, "user_not_found.html", gin.H{
@@ -367,7 +370,7 @@ func search(c *gin.Context) {
 	}
 }
 func profit_loss(c *gin.Context) {
-
+/* Currently Disabled, possible feature to be developed later
 	addr := c.Param("addr")
 	addr_aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
 	if err != nil {
@@ -385,4 +388,5 @@ func profit_loss(c *gin.Context) {
 			"PLEntries": pl_entries,
 //			"JSPriceData": js_price_history,
 	})
+*/
 }
