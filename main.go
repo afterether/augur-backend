@@ -10,6 +10,7 @@ var (
 	augur_srv *AugurServer
 	// thes variables should be removed on the next code reorg task
 	market_order_id int64 = 0
+	fill_order_id int64 = 0
 )
 func main() {
 	port_plain := os.Getenv("AUGUR_HTTP_PORT")

@@ -134,9 +134,35 @@ func build_javascript_profit_loss_history(entries *[]PLEntry) template.JS {
 				"y:"  + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
-				"click: function() {load_data(" +
+				"click: function() {load_pl_data(" +
 					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\"",
-								e.NetPosition,e.AccumPl,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
+								e.FinalProfit,e.AccumPl,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
+				")}" +
+				"}"
+		fmt.Printf("\nentry = %v\n",entry)
+		data_str= data_str + entry
+	}
+	data_str = data_str + "]"
+	fmt.Printf("JS profit loss hist string: %v\n",data_str)
+	return template.JS(data_str)
+}
+func build_javascript_open_positions(entries *[]PLEntry) template.JS {
+	var data_str string = "["
+
+	for i:=0 ; i < len(*entries) ; i++ {
+		if len(data_str) > 1 {
+			data_str = data_str + ","
+		}
+		var e = &(*entries)[i];
+		var entry string
+		entry = "{" +
+				"x:" + fmt.Sprintf("%v",i)  + "," +
+				"y:"  + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
+				"click: function() {load_open_pos_data(" +
+					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\"",
+								e.NetPosition,e.AccumFrozen,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
 				")}" +
 				"}"
 		fmt.Printf("\nentry = %v\n",entry)
@@ -307,7 +333,7 @@ func serve_user_info_page(c *gin.Context,addr string) {
 		pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
 		open_pos_entries := augur_srv.storage.get_open_positions(eoa_aid)
 		js_pl_data := build_javascript_profit_loss_history(&pl_entries)
-		js_open_pos_data := build_javascript_profit_loss_history(&open_pos_entries)
+		js_open_pos_data := build_javascript_open_positions(&open_pos_entries)
 		c.HTML(http.StatusOK, "user_info.html", gin.H{
 			"title": "User "+addr,
 			"user_addr": addr,

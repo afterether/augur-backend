@@ -8,22 +8,46 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/data.js"></script>
 <script>
-	function load_data(profit_loss,accum_pl,mkt_addr,date_str,outcome,mkt_descr) {
+	function load_pl_data(profit_loss,accum_pl,mkt_addr,date_str,outcome,mkt_descr) {
 		var elt
-		elt = document.getElementById("usermktinfo")
+		elt = document.getElementById("order_info")
 		elt.style.display="block"
-		elt = document.getElementById("fld_profit_loss")
+		elt = document.getElementById("f2_fld_profit_loss")
 		elt.innerHTML =profit_loss
-		elt = document.getElementById("fld_accum_pl")
+		elt = document.getElementById("f2_fld_accum_pl")
 		elt.innerHTML = accum_pl
-		elt = document.getElementById("fld_mkt_addr")
+		elt = document.getElementById("f2_fld_mkt_addr")
 		elt.innerHTML = mkt_addr
-		elt = document.getElementById("fld_outcome")
+		elt = document.getElementById("f2_fld_outcome")
 		elt.innerHTML = outcome
-		elt = document.getElementById("fld_mkt_descr")
+		elt = document.getElementById("f2_fld_mkt_descr")
 		elt.innerHTML = mkt_descr
-		elt = document.getElementById("fld_date")
+		elt = document.getElementById("f2_fld_date")
 		elt.innerHTML = date_str
+	}
+	function load_open_pos_data(frozen,max_profit,risk_reward,mkt_addr,outcome,
+				mkt_descr,date_str,counterparty,order_hash) {
+		var elt
+		elt = document.getElementById("open_pos_info")
+		elt.style.display="block"
+		elt = document.getElementById("f1_fld_funds_frozen")
+		elt.innerHTML = frozen
+		elt = document.getElementById("f1_fld_max_profit")
+		elt.innerHTML = max_profit 
+		elt = document.getElementById("f1_fld_risk_reward")
+		elt.innerHTML = reisk_reward
+		elt = document.getElementById("f1_fld_mkt_addr")
+		elt.innerHTML = mkt_addr
+		elt = document.getElementById("f1_fld_outcome")
+		elt.innerHTML = outcome
+		elt = document.getElementById("f1_fld_mkt_descr")
+		elt.innerHTML = mkt_descr
+		elt = document.getElementById("f1_fld_date")
+		elt.innerHTML = date_str
+		elt = document.getElementById("f1_fld_counterparty")
+		elt.innerHTML = counterparty
+		elt = document.getElementById("f1_fld_order_hash")
+		elt.innerHTML = counterparty
 	}
 	var open_positions_data = {{.JSOpenPosData}}
 	var profit_loss_data = {{.JSPLData}}
@@ -90,37 +114,86 @@
 	</table>
 	<br/>
 </div>
-Account's Open Positions:<br/><br/>
+<span class="user_info_generic">Account's Open Positions:</span><br/><br/>
 <div id="open_positions_chart"></div>
-<br/><br/>
-User Profit/Loss history:<br/><br/>
-<div id="profit_loss_chart"></div>
-<div id="usermktinfo" style="display: none;">
-	Profit Loss details:
+<div id="open_pos_info" class="user_info_generic" style="display: none;">
+	Open Position Info:
 	<table>
 		<tr>
-			<td>Profit/Loss in this trade</td>
-			<td><span id="fld_profit_loss"></span></td>
+			<td>Funds Frozen</td>
+			<td><span id="f1_fld_funds_frozen"></span></td>
 		</tr>
 		<tr>
-			<td>Accumulated Profit/Loss</td>
-			<td><span id="fld_accum_pl"></span></td>
+			<td>Max. profit</td>
+			<td><span id="f1_fld_max_profit"></span></td>
+		</tr>
+		<tr>
+			<td>Risk/Reward ratio</td>
+			<td><span id="f1_fld_risk_reward"></span></td>
 		</tr>
 		<tr>
 			<td>Market Address</td>
-			<td><span id="fld_mkt_addr"></span></td>
+			<td><span id="f1_fld_mkt_addr"></span></td>
 		</tr>
 		<tr>
 			<td>Outcome</td>
-			<td><span id="fld_outcome"></span></td>
+			<td><span id="f1_fld_outcome"></span></td>
 		</tr>
 		<tr>
 			<td>Market Description</td>
-			<td><span id="fld_mkt_descr"></span></td>
+			<td><span id="f1_fld_mkt_descr"></span></td>
 		</tr>
 		<tr>
 			<td>Date:</td>
-			<td><span id="fld_date"></span></td>
+			<td><span id="f1_fld_date"></span></td>
+		</tr>
+		<tr>
+			<td>Counterparty</td>
+			<td><a href=""><span id="f1_fld_counterparty"></span></td>
+		</tr>
+		<tr>
+			<td>Order Hash</td>
+			<td><a href=""><span id="f1_fld_order_hash"></span></td>
+		</tr>
+	</table>
+</div>
+<br/><br/>
+<div class="user_info_generic">User Profit/Loss history:</span><br/><br/>
+<div id="profit_loss_chart"></div>
+<div id="order_info" style="display: none;">
+	Order details:
+	<table>
+		<tr>
+			<td>Profit/Loss in this trade</td>
+			<td><span id="f2_fld_profit_loss"></span></td>
+		</tr>
+		<tr>
+			<td>Accumulated Profit/Loss</td>
+			<td><span id="f2_fld_accum_pl"></span></td>
+		</tr>
+		<tr>
+			<td>Market Address</td>
+			<td><span id="f2_fld_mkt_addr"></span></td>
+		</tr>
+		<tr>
+			<td>Outcome</td>
+			<td><span id="f2_fld_outcome"></span></td>
+		</tr>
+		<tr>
+			<td>Market Description</td>
+			<td><span id="f2_fld_mkt_descr"></span></td>
+		</tr>
+		<tr>
+			<td>Date:</td>
+			<td><span id="f2_fld_date"></span></td>
+		</tr>
+		<tr>
+			<td>Counterparty</td>
+			<td><a href=""><span id="f2_fld_counterparty"></span></td>
+		</tr>
+		<tr>
+			<td>Order hash</td>
+			<td><a href=""><span id="f2_fld_order_hash"></span></td>
 		</tr>
 	</table>
 </div>
