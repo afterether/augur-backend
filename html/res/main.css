@@ -236,6 +236,9 @@ div.user_info {
 	max-width:						40em;
 	padding-left:					2em;
 }
+#profit_loss_chart {
+	max-width:						40em;
+}
 .user_info_generic {
 	padding-left:					2em;
 }

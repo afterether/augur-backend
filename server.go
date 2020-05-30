@@ -135,8 +135,9 @@ func build_javascript_profit_loss_history(entries *[]PLEntry) template.JS {
 				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_pl_data(" +
-					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\"",
-								e.FinalProfit,e.AccumPl,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
+					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",%v",
+								e.FinalProfit,e.AccumPl,e.MktAddr,e.MktAddrSh,e.OutcomeStr,e.MktDescr,
+								e.Date,e.CounterPAddr,e.CounterPAddrSh,e.OrderHash,e.BlockNum) +
 				")}" +
 				"}"
 		fmt.Printf("\nentry = %v\n",entry)
@@ -161,8 +162,9 @@ func build_javascript_open_positions(entries *[]PLEntry) template.JS {
 				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_open_pos_data(" +
-					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\"",
-								e.NetPosition,e.AccumFrozen,e.MktAddrSh,e.Date,e.OutcomeStr,e.MktDescr) +
+					fmt.Sprintf("%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",%v",
+							e.FrozenFunds,e.MktAddr,e.MktAddrSh,e.OutcomeStr,e.MktDescr,e.Date,
+							e.CounterPAddr,e.CounterPAddrSh,e.OrderHash,e.BlockNum) +
 				")}" +
 				"}"
 		fmt.Printf("\nentry = %v\n",entry)
@@ -356,6 +358,14 @@ func serve_tx_info_page(c *gin.Context,tx_hash string) {
 			"tx_hash" : tx_hash,
 	})
 }
+func serve_money(c *gin.Context,addr common.Address) {
+
+	c.JSON(200, gin.H{
+			"eth": "10.0",
+			"dai": "20.0",
+			"rep": "30.0",
+		})
+}
 func search(c *gin.Context) {
 
 	keyword := c.Query("q")
@@ -390,6 +400,26 @@ func search(c *gin.Context) {
 			c.HTML(http.StatusBadRequest, "error.html", gin.H{
 				"title": "Augur Markets: Error",
 				"ErrDescr": "Invalid HEX string in hash parameter",
+			})
+			return
+		}
+	}
+}
+func read_money(c *gin.Context) {
+	// this function gets amount of currencies the User holds: ETH, DAI and REP (all in one call)
+	addr := c.Param("addr")
+	if (len(addr) == 40) || (len(addr) == 42) { // address
+		if len(addr) == 42 {	// strip 0x prefix
+			addr = addr[2:]
+		}
+		addr_bytes,err := hex.DecodeString(addr)
+		if err == nil {
+			addr := common.BytesToAddress(addr_bytes)
+			serve_money(c,addr)
+		} else {
+			c.HTML(http.StatusBadRequest, "error.html", gin.H{
+				"title": "Augur Markets: Error",
+				"ErrDescr": "Invalid HEX string in address parameter",
 			})
 			return
 		}
