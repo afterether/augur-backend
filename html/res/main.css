@@ -242,3 +242,7 @@ div.user_info {
 .user_info_generic {
 	padding-left:					2em;
 }
+div.order_info {
+	text-align:						center;
+	padding-left:					2em;
+}

@@ -5,9 +5,11 @@
 </head>
 <body>
 <script src="/res/darktheme.js"></script>
+<script src="/res/ajax.js"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/data.js"></script>
 <script>
+	var eoa_addr = '{{.UserInfo.EOAAddr}}'
 	function load_pl_data(profit_loss,accum_pl,mkt_addr,mkt_addr_sh,outcome,mkt_descr,date_str,
 				counterparty,counterparty_sh,order_hash,block_num) {
 		var elt
@@ -33,11 +35,11 @@
 		elt.innerHTML = block_num
 		// setup links
 		elt = document.getElementById("f2_market_href")
-		elt.href="/search?q=" + mkt_addr
+		elt.href="/market/" + mkt_addr
 		elt = document.getElementById("f2_counterparty_href")
 		elt.href="/search?q=" + counterparty
 		elt = document.getElementById("f2_order_hash_href")
-		elt.href="/search?q=" + order_hash
+		elt.href="/order/" + order_hash
 	}
 	function load_open_pos_data(frozen,mkt_addr,mkt_addr_sh,outcome,
 				mkt_descr,date_str,counterparty,counterparty_sh,order_hash,block_num) {
@@ -62,14 +64,31 @@
 		elt.innerHTML = block_num
 		// setup links
 		elt = document.getElementById("f1_market_href")
-		elt.href="/search?q=" + mkt_addr
+		elt.href="/market/" + mkt_addr
 		elt = document.getElementById("f1_counterparty_href")
 		elt.href="/search?q=" + counterparty
 		elt = document.getElementById("f1_order_hash_href")
-		elt.href="/search?q=" + order_hash
+		elt.href="/order/" + order_hash
 	}
 	var open_positions_data = {{.JSOpenPosData}}
 	var profit_loss_data = {{.JSPLData}}
+	Ajax_GET('/money/'+eoa_addr,function(data) {
+		var response=JSON.parse(data)
+		var elt
+		elt = document.getElementById("fld_eoa_dai")
+		elt.innerHTML=response.eoa_dai
+		elt = document.getElementById("fld_wallet_dai")
+		elt.innerHTML=response.wallet_dai
+		elt = document.getElementById("fld_eoa_rep")
+		elt.innerHTML=response.eoa_rep
+		elt = document.getElementById("fld_wallet_rep")
+		elt.innerHTML=response.wallet_rep
+		elt = document.getElementById("fld_eoa_eth")
+		elt.innerHTML=response.eoa_eth
+		elt = document.getElementById("fld_wallet_eth")
+		elt.innerHTML=response.wallet_eth
+	});
+
 </script>
 	<h3 class="page_title">User Info for {{.UserInfo.EOAAddrSh}}</h3>
 <div class="user_info">
@@ -131,16 +150,39 @@
 			<td>{{.UserInfo.TotalWithdrawn}}</td>
 		</tr>
 		<tr>
-			<td>DAI</td>
-			<td></td>
+			<td>Trade Frequencey Rank</td>
+			<td>Top {{.UserInfo.TopTrades}}% of all users</td>
 		</tr>
 		<tr>
-			<td>REP</td>
-			<td></td>
-		</td>
+			<td>Profitability Rank</td>
+			<td>Top {{.UserInfo.TopProfit}}% of all users</td>
+		</tr>
 		<tr>
-			<td>ETH</td>
-			<td></td>
+			<td>User funds</td>
+			<td>
+				<table border=1>
+					<tr>
+						<td></td>
+						<td>Real User (EOA)</td>
+						<td>User's Augur Wallet</td>
+					</tr>
+					<tr>
+						<td>DAI</td>
+						<td><span id="fld_eoa_dai"></span></td>
+						<td><span id="fld_wallet_dai"></span></td>
+					</tr>
+					<tr>
+						<td>REP</td>
+						<td><span id="fld_eoa_rep"></span></td>
+						<td><span id="fld_wallet_rep"></span></td>
+					</tr>
+					<tr>
+						<td>ETH</td>
+						<td><span id="fld_eoa_eth"></span></td>
+						<td><span id="fld_wallet_eth"></span></td>
+					</tr>
+				</table>
+			</td>
 		</tr>
 	</table>
 	<br/>

@@ -6,8 +6,11 @@ import (
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
 	"html/template"
+	"math/big"
+	"context"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 const (
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
@@ -158,8 +161,8 @@ func build_javascript_open_positions(entries *[]PLEntry) template.JS {
 		var entry string
 		entry = "{" +
 				"x:" + fmt.Sprintf("%v",i)  + "," +
-				"y:"  + fmt.Sprintf("%v",e.AccumPl) + "," +
-				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"y:"  + fmt.Sprintf("%v",e.AccumFrozen) + "," +
+				"pl: " + fmt.Sprintf("%v",e.FrozenFunds) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_open_pos_data(" +
 					fmt.Sprintf("%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",%v",
@@ -329,7 +332,7 @@ func market_price_history(c *gin.Context) {
 }
 func serve_user_info_page(c *gin.Context,addr string) {
 
-	eoa_aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
+	eoa_aid,err := augur_srv.storage.nonfatal_lookup_address_id(addr)
 	if err == nil {
 		user_info := augur_srv.storage.get_user_info(eoa_aid)
 		pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
@@ -358,13 +361,109 @@ func serve_tx_info_page(c *gin.Context,tx_hash string) {
 			"tx_hash" : tx_hash,
 	})
 }
+func get_token_balance(token_type int,addr *common.Address) float64 {
+	// input: token_type = 0 => DAI token; token_type = 1 => Rep token
+	switch token_type {	//  null pointer error prevention
+		case 0:
+			if ctrct_dai_token == nil {
+				return 0.0
+			}
+		case 1:
+			if ctrct_rep_token == nil {
+				return 0.0
+			}
+	}
+	big_float_balance := big.NewFloat(0.0)
+	var copts = new(bind.CallOpts)
+	var err error
+	var int_balance *big.Int
+	switch token_type {
+		case 0:
+			int_balance,err = ctrct_dai_token.BalanceOf(copts,*addr)
+			fmt.Printf("switch: DAI int_balance=%v\n",int_balance.String())
+		case 1:
+			int_balance,err = ctrct_rep_token.BalanceOf(copts,*addr)
+			fmt.Printf("switch: REP int_balance=%v\n",int_balance.String())
+		default:
+			Fatalf("get_token_balance(): undefined behavior")
+	}
+	fmt.Printf("token.BalanceOf() returns: %v\n",int_balance.String())
+	if err == nil {
+		f_balance :=big.NewFloat(0.0)
+		f_balance.SetInt(int_balance)
+		divisor:=big.NewFloat(0.0)
+		divisor.SetString("1000000000000000000.0")
+		div_result:=new(big.Float).Quo(f_balance,divisor)
+		fmt.Printf("div_result=%v\n",div_result.String())
+		big_float_balance.Set(div_result)
+		fmt.Printf("big_float_balance=%v\n",big_float_balance)
+	} else {
+		fmt.Printf("Error retrieving token (type=%v) balance for addr %v: %v\n",
+							token_type,addr.String(),err)
+	}
+	balance,_:=big_float_balance.Float64()
+	return balance
+}
+func get_eth_balance(addr *common.Address) float64 {
+	ctx := context.Background()
+	var float_eth_balance float64 = 0.0
+	big_eth_balance,err := rpcclient.BalanceAt(ctx,*addr,nil)
+	if err == nil {
+		fmt.Printf("eth_balance big int: %v\n",big_eth_balance.String())
+		big_float_eth_balance := big.NewFloat(0.0)
+		big_float_eth_balance.SetInt(big_eth_balance)
+		divisor:=big.NewFloat(0.0)
+		divisor.SetString("1000000000000000000.0")
+		div_result:=new(big.Float).Quo(big_float_eth_balance,divisor)
+		float_eth_balance,_ = div_result.Float64()
+	}
+	return float_eth_balance
+}
 func serve_money(c *gin.Context,addr common.Address) {
+	// the input address must be EOA, from that we can get Wallet addr
+
+	var wallet_aid int64 = 0
+	eoa_aid,err := augur_srv.storage.nonfatal_lookup_address_id(addr.String())
+	if err == nil {
+		wallet_aid,_ = augur_srv.storage.lookup_wallet_aid(eoa_aid)
+	} else {
+		fmt.Printf("wallet_aid lookup failed for eoa_aid=%v\n",eoa_aid)
+		c.JSON(200,gin.H{
+			"eoa_eth":0,"wallet_eth":0,"eoa_dai":0,"wallet_dai":0,"eoa_rep":0,"wallet_rep":0,
+		})
+		return
+	}
+	fmt.Printf("money for addr %v, eoa_aid=%v\n",addr.String(),eoa_aid)
+	eoa_dai_balance := get_token_balance(0,&addr)
+	eoa_rep_balance := get_token_balance(1,&addr)
+	eoa_eth_balance := get_eth_balance(&addr)
+
+	var wallet_dai_balance float64 = 0.0
+	var wallet_rep_balance float64 = 0.0
+	var wallet_eth_balance float64 = 0.0
+
+	fmt.Printf("wallet_aid=%v\n",wallet_aid)
+	if wallet_aid != 0 {
+		wallet_addr,err := augur_srv.storage.lookup_address(wallet_aid)
+		if err == nil {
+			waddr := common.HexToAddress(wallet_addr)
+			fmt.Printf("wallet addr = %v\n",wallet_addr)
+			wallet_dai_balance = get_token_balance(0,&waddr)
+			wallet_rep_balance = get_token_balance(1,&waddr)
+			wallet_eth_balance = get_eth_balance(&waddr)
+		} else {
+			fmt.Printf("address lookup for wallet_aid = %v failed: %v",wallet_aid,err)
+		}
+	}
 
 	c.JSON(200, gin.H{
-			"eth": "10.0",
-			"dai": "20.0",
-			"rep": "30.0",
-		})
+			"eoa_eth": fmt.Sprintf("%v",eoa_eth_balance),
+			"wallet_eth": fmt.Sprintf("%v",wallet_eth_balance),
+			"eoa_dai": fmt.Sprintf("%v",eoa_dai_balance),
+			"wallet_dai": fmt.Sprintf("%v",wallet_dai_balance),
+			"eoa_rep": fmt.Sprintf("%v",eoa_rep_balance),
+			"wallet_rep": fmt.Sprintf("%v",wallet_rep_balance),
+	})
 }
 func search(c *gin.Context) {
 
@@ -425,24 +524,20 @@ func read_money(c *gin.Context) {
 		}
 	}
 }
-func profit_loss(c *gin.Context) {
-/* Currently Disabled, possible feature to be developed later
-	addr := c.Param("addr")
-	addr_aid,err := augur_srv.storage.nonfatal_lookup_address(addr)
-	if err != nil {
+func order(c *gin.Context) {
+
+	order_hash:= c.Param("order")
+	order,err := augur_srv.storage.get_order_info(order_hash)
+	if err!=nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{
 			"title": "Augur Markets: Error",
-			"ErrDescr": "Can't find real user address",
+			"ErrDescr": "Can't find the order",
 		})
 		return
 	}
-	pl_entries := augur_srv.storage.get_profit_loss(addr_aid);
-	//js_price_history := build_javascript_price_history(&mkt_price_hist)
-	//fmt.Printf("js price history = %v\n",js_price_history)
-	c.HTML(http.StatusOK, "profit_loss_history.html", gin.H{
-			"title": "User's profit/loss",
-			"PLEntries": pl_entries,
-//			"JSPriceData": js_price_history,
+
+	c.HTML(http.StatusOK, "order_info.html", gin.H{
+			"title": "Order "+order_hash,
+			"OrderInfo" : order,
 	})
-*/
 }

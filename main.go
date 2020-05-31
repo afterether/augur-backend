@@ -7,17 +7,39 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/common"
+	//"github.com/ethereum/go-ethereum/accounts/abi"
+	//"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 var (
 	RPC_URL = os.Getenv("AUGUR_ETH_NODE_RPC_URL")
 	rpcclient *ethclient.Client
 
 	augur_srv *AugurServer
+
+	// contracts
+	all_contracts map[string]interface{}
+
+	dai_addr common.Address
+	rep_addr common.Address
+
+	ctrct_dai_token *DAICash
+	ctrct_rep_token *RepTok
+
 	// thes variables should be removed on the next code reorg task
 	market_order_id int64 = 0
 	fill_order_id int64 = 0
 )
+func initialize() {
+
+	contract_addresses := new(ContractAddresses)
+	contract_addresses.dai_addr = &dai_addr
+	contract_addresses.reputation_addr = &rep_addr
+	init_contract_addresses(contract_addresses)
+}
 func main() {
+
+	initialize()
 
 	if len(RPC_URL) == 0 {
 		fmt.Printf("Configuration error: RPC URL of Ethereum node is not set."+
@@ -28,6 +50,18 @@ func main() {
 		rpcclient, err = ethclient.Dial(RPC_URL)
 		if err != nil {
 			log.Fatal(err)
+		}
+		// init contracts
+		fmt.Println("init DAI contract with addr %v\n",dai_addr.String())
+		ctrct_dai_token,err = NewDAICash(dai_addr,rpcclient)
+		if err != nil {
+			Fatalf("Couldn't initialize DAI Cash contract: %v\n",err)
+		}
+
+		fmt.Println("init REP contract with addr %v\n",rep_addr.String())
+		ctrct_rep_token,err = NewRepTok(rep_addr,rpcclient)
+		if err != nil {
+			Fatalf("Couldn't initialize Rep Token contract: %v\n",err)
 		}
 	}
 
@@ -63,7 +97,8 @@ func main() {
 	r.GET("/mdepth/:market/:outcome", market_depth)
 	r.GET("/mphist/:market/:outcome", market_price_history)
 	r.GET("/search", search)
-	r.GET("/readmoney/:addr",  read_money)
+	r.GET("/money/:addr",  read_money)
+	r.GET("/order/:order",  order)
 
 	r.Static("/imgs", "./html/imgs")
 	r.Static("/res", "./html/res")			// resources (static)
