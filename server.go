@@ -135,7 +135,8 @@ func build_javascript_profit_loss_history(entries *[]PLEntry) template.JS {
 		entry = "{" +
 				"x:" + fmt.Sprintf("%v",i)  + "," +
 				"y:"  + fmt.Sprintf("%v",e.AccumPl) + "," +
-				"pl: " + fmt.Sprintf("%v",e.AccumPl) + "," +
+				"pl: " + fmt.Sprintf("%v",e.FinalProfit) + "," +
+				"pl_accum: " + fmt.Sprintf("%v",e.AccumPl) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_pl_data(" +
 					fmt.Sprintf("%v,%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",%v",
@@ -162,7 +163,8 @@ func build_javascript_open_positions(entries *[]PLEntry) template.JS {
 		entry = "{" +
 				"x:" + fmt.Sprintf("%v",i)  + "," +
 				"y:"  + fmt.Sprintf("%v",e.AccumFrozen) + "," +
-				"pl: " + fmt.Sprintf("%v",e.FrozenFunds) + "," +
+				"frozen: " + fmt.Sprintf("%v",e.FrozenFunds) + "," +
+				"frozen_accum: " + fmt.Sprintf("%v",e.AccumFrozen) + "," +
 				"date: \"" + fmt.Sprintf("%v",e.Date) + "\"," +
 				"click: function() {load_open_pos_data(" +
 					fmt.Sprintf("%v,\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",\"%v\",%v",

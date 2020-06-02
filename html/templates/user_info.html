@@ -371,7 +371,7 @@ Highcharts.chart('profit_loss_chart', {
 	},
 	tooltip: {
 		formatter: function() {
-			tooltip ="<div>Profit/Loss: "+this.point.pl+ "<br/>Date: "+this.point.date+"</div>"
+			tooltip ="<div>Order's Profit/Loss: "+this.point.pl+ "<br/>Accumulated Profit/Loss: "+this.data.pl_accum+"<br/>Date: "+this.point.date+"</div>"
 			 return tooltip;
 		}
 	},
@@ -441,7 +441,7 @@ Highcharts.chart('open_positions_chart', {
 	},
 	tooltip: {
 		formatter: function() {
-			tooltip ="<div>Frozen Funds: "+this.point.pl+ "<br/>Date: "+this.point.date+"</div>"
+			tooltip ="<div>Frozen in Order: "+this.point.frozen+ "<br/>Accumulated: "+this.point.frozen_accum+"<br/>Date: "+this.point.date+"</div>"
 			 return tooltip;
 		}
 	},

@@ -12,7 +12,10 @@ body {
 	justify-content: center;
 	background-color: black;
 }
-
+a {
+	color: white;
+	text-decoration-color: blue;
+}
 nav ul {
 	list-style-type: none;
 	margin: 0;
