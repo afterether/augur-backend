@@ -119,6 +119,11 @@ div.category_record_subcategory {
 	font-weight:                    bold;
 	font-size:                      1.5em;
 }
+div.category_record_subcategory {
+	display:                        inline;
+	font-weight:                    bold;
+	font-size:                      1.5em;
+}
 div.category_separator {
 	display:                        inline;
 }
@@ -128,9 +133,10 @@ div.mkt_trade {
 	font-weight:                    bold;
 	font-size:                      1.2em;
 }
-.market_trades {
+table.market_trades {
 	border:							1px solid white;
 	border-collapse:				collapse;
+	width:							100%;
 }
 div.mkt_trade_hdr {
 	display:                        inline-block;
@@ -248,4 +254,16 @@ div.user_info {
 div.order_info {
 	text-align:						center;
 	padding-left:					2em;
+}
+#market_trades_nav {
+	height:				10em;
+}
+div.category_record_small {
+	display:                        block;
+	border:							solid 1px black;
+	font-size:                      1em;
+}
+div.category_record_subcategory_small {
+	display:                        inline;
+	font-size:                      1em;
 }

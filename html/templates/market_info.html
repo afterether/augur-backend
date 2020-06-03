@@ -32,17 +32,19 @@
 	<td>{{.Market.LongDesc}}</td>
 </tr>
 <tr>
-	<td>Categories</td>
-	<td>{{.Market.Categories}}</td>
+	<td>Category</td>
+	<td>	{{template "category_record_small" .Market}}</td>
 </tr>
 <tr>
 	<td>Market Type</td>
-	<td>{{.Market.MktType}}</td>
+	<td>{{.Market.MktTypeStr}}</td>
 </td>
+{{if ne 2 .Market.MktType }}
 <tr>
 	<td>Outcomes</td>
 	<td>{{.Market.Outcomes}}</td>
 </tr>
+{{end}}
 <tr>
 	<td>Status</td>
 	<td>{{.Market.Status}}</td>
@@ -77,14 +79,22 @@
 <br/><br/>
 <div class="market_info">
 	{{template "market_trades" .Trades}}
+	<nav id="market_trades_nav">
+		<ul>
+			<li style="float: right">
+				<a class="btn_link" href="/fulltradelist/{{.Market.MktAddr}}">Full List</a>
+				<span></span><span></span><span></span><span></span>
+			</li>
+		</ul>
+	</nav>
 </div>
 <nav>
 	<ul>
-	<li>
-		<a class="btn_link" href="/index.html">Back</a>
-		<span></span><span></span><span></span><span></span>
-	</li>
-</ul>
+		<li>
+			<a class="btn_link" href="/index.html">Back</a>
+			<span></span><span></span><span></span><span></span>
+		</li>
+	</ul>
 </nav>
 </body>
 </html>

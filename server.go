@@ -14,15 +14,29 @@ import (
 )
 const (
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
+	DEFAILT_MARKET_TRADES_LIMIT int = 20
 )
 type AugurServer struct {
 	storage		*SQLStorage
 }
+
 func create_augur_server() *AugurServer {
 
 	srv := new(AugurServer)
 	srv.storage = connect_to_storage()
 	return srv
+}
+func parse_int_from_remote_or_error(c *gin.Context,ascii_int *string) (int,bool) {
+	p, err := strconv.Atoi(*ascii_int)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Can't parse integer parameter (non-numeric characters detected)",
+		})
+		return 0,false
+	}
+	result := int(p)
+	return result,true
 }
 func mkt_depth_entry_to_js_obj(de *DepthEntry) string {
 
@@ -232,18 +246,43 @@ func explorer(c *gin.Context) {
 			"block_num" : blknum,
 	})
 }
-func market_trades(c *gin.Context) {
+func market_info(c *gin.Context) {
+
 	market := c.Param("market")
-	fmt.Printf("getting trades for market %v\n",market)
+
+	var limit int = DEFAILT_MARKET_TRADES_LIMIT;
+	p_limit := c.Query("limit")
+	if len(p_limit) > 0 {
+		var success bool
+		limit,success = parse_int_from_remote_or_error(c,&p_limit)
+		if !success {
+			return
+		}
+	}
+
+	fmt.Printf("getting trades for market %vi limit = %v\n",market,limit)
 	market_info,_ := augur_srv.storage.get_market_info(market,0,false)
 	fmt.Printf("market info = %+v",market_info)
-	trades := augur_srv.storage.get_mkt_trades(market)
+	trades := augur_srv.storage.get_mkt_trades(market,limit)
 	outcome_vols,_ := augur_srv.storage.get_outcome_volumes(market)
 	c.HTML(http.StatusOK, "market_info.html", gin.H{
 			"title": "Trades for market",
 			"Trades" : trades,
 			"Market": market_info,
 			"OutcomeVols" : outcome_vols,
+	})
+}
+func full_trade_list(c *gin.Context) {
+
+	market := c.Param("market")
+
+	fmt.Printf("getting trades for market %vi for a full trade listing",market)
+	market_info,_ := augur_srv.storage.get_market_info(market,0,false)
+	trades := augur_srv.storage.get_mkt_trades(market,0)
+	c.HTML(http.StatusOK, "full_trade_list.html", gin.H{
+			"title": "Trades for market",
+			"Trades" : trades,
+			"Market": market_info,
 	})
 }
 func market_depth(c *gin.Context) {
