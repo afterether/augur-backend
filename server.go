@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 const (
+	DEFAULT_DB_LOG_FILE_NAME = "/var/tmp/backend-db.log"
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
 	DEFAILT_MARKET_TRADES_LIMIT int = 20
 )
@@ -24,6 +25,7 @@ func create_augur_server() *AugurServer {
 
 	srv := new(AugurServer)
 	srv.storage = connect_to_storage()
+	srv.storage.init_log(DEFAULT_DB_LOG_FILE_NAME)
 	return srv
 }
 func parse_int_from_remote_or_error(c *gin.Context,ascii_int *string) (int,bool) {
@@ -246,9 +248,8 @@ func explorer(c *gin.Context) {
 			"block_num" : blknum,
 	})
 }
-func market_info(c *gin.Context) {
 
-	market := c.Param("market")
+func complete_and_output_market_info(c *gin.Context,minfo InfoMarket) {
 
 	var limit int = DEFAILT_MARKET_TRADES_LIMIT;
 	p_limit := c.Query("limit")
@@ -259,18 +260,24 @@ func market_info(c *gin.Context) {
 			return
 		}
 	}
-
-	fmt.Printf("getting trades for market %vi limit = %v\n",market,limit)
-	market_info,_ := augur_srv.storage.get_market_info(market,0,false)
-	fmt.Printf("market info = %+v",market_info)
-	trades := augur_srv.storage.get_mkt_trades(market,limit)
-	outcome_vols,_ := augur_srv.storage.get_outcome_volumes(market)
+	fmt.Printf("markte info addr=%v, full var = %+v\n",minfo.MktAddr,minfo)
+	Info.Printf("markte info addr=%v, full var = %+v\n",minfo.MktAddr,minfo)
+	trades := augur_srv.storage.get_mkt_trades(minfo.MktAddr,limit)
+	outcome_vols,_ := augur_srv.storage.get_outcome_volumes(minfo.MktAddr)
 	c.HTML(http.StatusOK, "market_info.html", gin.H{
 			"title": "Trades for market",
 			"Trades" : trades,
-			"Market": market_info,
+			"Market": minfo ,
 			"OutcomeVols" : outcome_vols,
 	})
+}
+func market_info(c *gin.Context) {
+
+	market := c.Param("market")
+
+	market_info,_ := augur_srv.storage.get_market_info(market,0,false)
+	fmt.Printf("market info = %+v",market_info)
+	complete_and_output_market_info(c,market_info)
 }
 func full_trade_list(c *gin.Context) {
 
@@ -518,7 +525,29 @@ func search(c *gin.Context) {
 		if err == nil {
 			addr := common.BytesToAddress(addr_bytes)
 			addr_str := addr.String()
-			serve_user_info_page(c,addr_str)
+			aid,err:=augur_srv.storage.nonfatal_lookup_address_id(addr_str)
+			if err==nil {
+				fmt.Printf("checking address in market info: %v\n",addr_str)
+				market_info,err := augur_srv.storage.get_market_info(addr_str,0,false)
+				if err == nil {
+					complete_and_output_market_info(c,market_info)
+					return
+				}
+				eoa_aid,err:=augur_srv.storage.lookup_eoa_aid(aid)
+				if err==nil {
+					// the input was - user's wallet
+					eoa_addr,_:=augur_srv.storage.lookup_address(eoa_aid)
+					serve_user_info_page(c,eoa_addr)
+				} else {
+					serve_user_info_page(c,addr_str)
+				}
+			} else {
+				c.HTML(http.StatusBadRequest, "error.html", gin.H{
+					"title": "Augur Markets: Error",
+					"ErrDescr": "Invalid HEX string in address parameter",
+				})
+				return
+			}
 		} else {
 			c.HTML(http.StatusBadRequest, "error.html", gin.H{
 				"title": "Augur Markets: Error",
@@ -580,5 +609,19 @@ func order(c *gin.Context) {
 	c.HTML(http.StatusOK, "order_info.html", gin.H{
 			"title": "Order "+order_hash,
 			"OrderInfo" : order,
+	})
+}
+func category(c *gin.Context) {
+
+	p_catid:= c.Param("catid")
+
+	cat_id,success := parse_int_from_remote_or_error(c,&p_catid)
+	if !success {
+		return
+	}
+	cat_markets := augur_srv.storage.get_category_markets(int64(cat_id))
+	c.HTML(http.StatusOK, "category_markets.html", gin.H{
+			"title": "Category Markets",
+			"Markets": cat_markets,
 	})
 }

@@ -29,6 +29,9 @@ var (
 	// thes variables should be removed on the next code reorg task
 	market_order_id int64 = 0
 	fill_order_id int64 = 0
+
+	Error   *log.Logger
+	Info    *log.Logger
 )
 func initialize() {
 
@@ -38,6 +41,9 @@ func initialize() {
 	init_contract_addresses(contract_addresses)
 }
 func main() {
+
+	Info = log.New(os.Stdout,"INFO: ",log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(os.Stderr,"ERROR: ",log.Ldate|log.Ltime|log.Lshortfile)
 
 	initialize()
 
@@ -100,6 +106,7 @@ func main() {
 	r.GET("/search", search)
 	r.GET("/money/:addr",  read_money)
 	r.GET("/order/:order",  order)
+	r.GET("/category/:catid",  category)
 
 	r.Static("/imgs", "./html/imgs")
 	r.Static("/res", "./html/res")			// resources (static)

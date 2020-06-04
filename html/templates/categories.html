@@ -8,9 +8,15 @@
 
 <body>
 <h3 class="page_title">Market Categories</h3>
+<table>
+	<tr>
+		<td>CATEGORY</td>
+		<td>MARKETS</td>
+	</tr>
 {{- range .Categories}}
 	{{template "category_record" .}}
 {{- end}}
+</table>
 <nav>
 	<ul>
 	<li>
