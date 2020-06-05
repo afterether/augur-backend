@@ -16,6 +16,7 @@ const (
 	DEFAULT_DB_LOG_FILE_NAME = "/var/tmp/backend-db.log"
 	DEFAULT_MARKET_ROWS_LIMIT int	= 10
 	DEFAILT_MARKET_TRADES_LIMIT int = 20
+	DEFAULT_USER_REPORTS_LIMIT int = 10
 )
 type AugurServer struct {
 	storage		*SQLStorage
@@ -382,19 +383,28 @@ func serve_user_info_page(c *gin.Context,addr string) {
 
 	eoa_aid,err := augur_srv.storage.nonfatal_lookup_address_id(addr)
 	if err == nil {
-		user_info := augur_srv.storage.get_user_info(eoa_aid)
-		pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
-		open_pos_entries := augur_srv.storage.get_open_positions(eoa_aid)
-		js_pl_data := build_javascript_profit_loss_history(&pl_entries)
-		js_open_pos_data := build_javascript_open_positions(&open_pos_entries)
-		c.HTML(http.StatusOK, "user_info.html", gin.H{
-			"title": "User "+addr,
-			"user_addr": addr,
-			"UserInfo" : user_info,
-			"PLEntries" : pl_entries,
-			"JSPLData" : js_pl_data,
-			"JSOpenPosData" : js_open_pos_data,
-		})
+		user_info,err := augur_srv.storage.get_user_info(eoa_aid)
+		if err == nil {
+			pl_entries := augur_srv.storage.get_profit_loss(eoa_aid)
+			open_pos_entries := augur_srv.storage.get_open_positions(eoa_aid)
+			js_pl_data := build_javascript_profit_loss_history(&pl_entries)
+			js_open_pos_data := build_javascript_open_positions(&open_pos_entries)
+			user_reports := augur_srv.storage.get_user_reports(eoa_aid,DEFAULT_USER_REPORTS_LIMIT)
+			c.HTML(http.StatusOK, "user_info.html", gin.H{
+				"title": "User "+addr,
+				"user_addr": addr,
+				"UserInfo" : user_info,
+				"PLEntries" : pl_entries,
+				"JSPLData" : js_pl_data,
+				"JSOpenPosData" : js_open_pos_data,
+				"UserReports" : user_reports,
+			})
+		} else {
+			c.HTML(http.StatusOK, "user_not_found.html", gin.H{
+				"title": "User "+addr,
+				"user_addr": addr,
+			})
+		}
 	} else {
 		c.HTML(http.StatusOK, "user_not_found.html", gin.H{
 			"title": "User "+addr,
@@ -624,4 +634,51 @@ func category(c *gin.Context) {
 			"title": "Category Markets",
 			"Markets": cat_markets,
 	})
+}
+func full_reports(c *gin.Context) {
+
+	p_addr := c.Param("addr")
+	if (len(p_addr) == 40) || (len(p_addr) == 42) { // address
+		if len(p_addr) == 42 {	// strip 0x prefix
+			p_addr = p_addr[2:]
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Invalid length of address parameter",
+		})
+	}
+	addr_bytes,err := hex.DecodeString(p_addr)
+	if err == nil {
+		addr := common.BytesToAddress(addr_bytes)
+		addr_str := addr.String()
+		aid,err:=augur_srv.storage.nonfatal_lookup_address_id(addr_str)
+		fmt.Printf("addr=%v, aid=%v\n",addr_str,aid)
+		if err==nil {
+			user_info,err := augur_srv.storage.get_user_info(aid)
+			if err!= nil {
+				c.HTML(http.StatusBadRequest, "error.html", gin.H{
+					"title": "Augur Markets: Error",
+					"ErrDescr": fmt.Sprintf("No records found for address: %v",addr_str),
+				})
+			} else {
+				user_reports := augur_srv.storage.get_user_reports(aid,0)
+				c.HTML(http.StatusOK, "full_user_reports.html", gin.H{
+					"title": fmt.Sprintf("User Reports %v",addr),
+					"UserInfo" : user_info,
+					"UserReports" : user_reports,
+				})
+			}
+		} else {
+			c.HTML(http.StatusBadRequest, "error.html", gin.H{
+				"title": "Augur Markets: Error",
+				"ErrDescr": fmt.Sprintf("DB error: %v",err),
+			})
+		}
+	} else {
+		c.HTML(http.StatusBadRequest, "error.html", gin.H{
+			"title": "Augur Markets: Error",
+			"ErrDescr": "Invalid HEX string in address parameter",
+		})
+	}
 }

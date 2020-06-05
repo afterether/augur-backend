@@ -294,6 +294,19 @@
 		</tr>
 	</table>
 </div>
+<h3>User's participation in Reporting</h3>
+<div id="user_reporting">
+	{{template "user_reports" .UserReports}}
+</div>
+	<nav id="market_trades_nav">
+		<ul>
+			<li style="float: right">
+				<a class="btn_link" href="/fullreports/{{.UserInfo.EOAAddr}}">All Reports</a>
+				<span></span><span></span><span></span><span></span>
+			</li>
+		</ul>
+	</nav>
+
 <script>
 // font loading begins
 	Highcharts.createElement('link', {

@@ -107,6 +107,7 @@ func main() {
 	r.GET("/money/:addr",  read_money)
 	r.GET("/order/:order",  order)
 	r.GET("/category/:catid",  category)
+	r.GET("/fullreports/:addr",  full_reports)
 
 	r.Static("/imgs", "./html/imgs")
 	r.Static("/res", "./html/res")			// resources (static)
